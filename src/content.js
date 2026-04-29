@@ -29,7 +29,6 @@ export const CATEGORY_LINKS = [
   "Pro Series",
   "Starter Product",
   "Accessories",
-  "App",
   "Compare",
 ];
 
@@ -54,13 +53,6 @@ export const PRODUCTS = [
     originalPrice: "$599",
     price: "$599 est.",
     sub: "Core sonar scout",
-  },
-  {
-    name: "Kastave App Premium",
-    label: "Software",
-    originalPrice: "$9.99",
-    price: "$0.99 trial",
-    sub: "Maps and AI strategy",
   },
 ];
 
