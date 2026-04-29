@@ -14,8 +14,6 @@ import {
   TRUST,
 } from "./content.js";
 import { initAnalytics, trackEvent, withUtm } from "./tracking.js";
-import appImage from "../assets/kastave-new-app.png";
-import emailImage from "../assets/kastave-new-email.png";
 import heroImage from "../assets/kastave-new-hero.png";
 import processImage from "../assets/kastave-new-process.png";
 import productImage from "../assets/kastave-product-real.jpg";
@@ -95,7 +93,6 @@ function App() {
         <CategoryNav />
         <ProductGrid onStripe={() => reserveWithStripe("product_grid")} />
         <InteractiveProductVisual />
-        <PremiumApp onStripe={() => reserveWithStripe("premium_app")} onSubscribe={subscribe} message={signupMessage} />
         <ProcessVisual />
         <CapabilityCards />
         <Accessories onAdd={() => setDialogOpen(true)} />
@@ -120,7 +117,7 @@ function AnnouncementBar() {
 
 function SiteNav() {
   const [open, setOpen] = useState(false);
-  const navItems = ["Products", "Accessories", "How It Works", "App", "Support", "Compare"];
+  const navItems = ["Products", "Accessories", "How It Works", "Support", "Compare"];
 
   return (
     <header className="site-nav">
@@ -213,7 +210,7 @@ function ProductGrid({ onStripe }) {
         {PRODUCTS.map((product, index) => (
           <article className="product-card" key={product.name}>
             <span className="sale-pill">{product.label}</span>
-            <img src={index === 3 ? appImage : productImage} alt={product.name} />
+            <img src={productImage} alt={product.name} />
             <h3>{product.name}</h3>
             <p>{product.sub}</p>
             <div className="price-line">
@@ -265,28 +262,6 @@ function InteractiveProductVisual() {
             </button>
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
-
-function PremiumApp({ onStripe, onSubscribe, message }) {
-  return (
-    <section className="premium-app" id="app">
-      <img src={emailImage} alt="Kastave boat and app early access" />
-      <div className="premium-copy">
-        <p className="section-kicker">Premium Maps</p>
-        <h2>Analyze 3D terrain and fish activity for prime spots.</h2>
-        <p>
-          Hardware and software work together: scan water, save routes, revisit productive zones,
-          and build a smarter bank-fishing map over time.
-        </p>
-        <button className="primary-button buy-button" type="button" onClick={onStripe}>
-          Get Premium for $0.99
-          <span>Early software trial</span>
-        </button>
-        <EmailForm id="premium-email" onSubscribe={(email) => onSubscribe(email, "premium_app")} />
-        <p className="form-message">{message}</p>
       </div>
     </section>
   );
@@ -510,7 +485,6 @@ function Footer({ onSubscribe }) {
         <a href="#support">Support</a>
         <a href="#compare">Compare</a>
         <a href="#accessories">Accessories</a>
-        <a href="#app">App</a>
       </div>
       <div>
         <strong>Get product updates</strong>
