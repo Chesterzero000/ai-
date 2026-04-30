@@ -99,7 +99,6 @@ function App() {
         <ProcessVisual />
         <CapabilityCards />
         <Accessories onAdd={() => setDialogOpen(true)} />
-        <Compare onCompare={() => openSurvey("compare")} />
         <Offer
           onStripe={() => reserveWithStripe("offer")}
           onPaypal={() => reserveWithPaypal("offer")}
@@ -120,7 +119,7 @@ function AnnouncementBar() {
 
 function SiteNav() {
   const [open, setOpen] = useState(false);
-  const navItems = ["Products", "Accessories", "How It Works", "App", "Support", "Compare"];
+  const navItems = ["Products", "Accessories", "How It Works", "App", "Support"];
 
   return (
     <header className="site-nav">
@@ -168,9 +167,6 @@ function Hero({ onStripe }) {
             Buy Now
             <span>Reserve for $1</span>
           </button>
-          <a className="secondary-link" href="#compare">
-            Compare Products
-          </a>
         </div>
         <p className="microcopy">{HERO.note}</p>
       </div>
@@ -415,24 +411,6 @@ function Accessories({ onAdd }) {
   );
 }
 
-function Compare({ onCompare }) {
-  return (
-    <section className="compare-band" id="compare">
-      <div>
-        <p className="section-kicker">Product guide</p>
-        <h2>Wondering which product is best for you?</h2>
-        <p>
-          Compare the launch reservation, planned starter package, and Pro direction before you
-          commit.
-        </p>
-      </div>
-      <button className="primary-button" type="button" onClick={onCompare}>
-        Compare Products
-      </button>
-    </section>
-  );
-}
-
 function Offer({ onStripe, onPaypal, onSurvey, message }) {
   return (
     <section className="offer" id="special-offers">
@@ -508,7 +486,6 @@ function Footer({ onSubscribe }) {
       </div>
       <div className="footer-links">
         <a href="#support">Support</a>
-        <a href="#compare">Compare</a>
         <a href="#accessories">Accessories</a>
         <a href="#app">App</a>
       </div>

@@ -30,7 +30,6 @@ export const CATEGORY_LINKS = [
   "Starter Product",
   "Accessories",
   "App",
-  "Compare",
 ];
 
 export const PRODUCTS = [
