@@ -1,3 +1,5 @@
+import { recordAnalyticsEvent } from "./supabaseBackend.js";
+
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
 
 export function captureUtmParams() {
@@ -125,6 +127,8 @@ export function trackEvent(name, properties = {}) {
     ...properties,
     ...getStoredUtm(),
   };
+
+  recordAnalyticsEvent(name, payload);
 
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({ event: name, ...payload });

@@ -1,44 +1,94 @@
 export const SITE = {
   name: "Kastave",
+  programName: "Kastave Bank Angler Scout Program",
   domain: "https://kastave.com",
+  contactEmail: "Kastave@proton.me",
   priceRange: "$600-$800 target product range",
-  stripePaymentLink: import.meta.env.VITE_STRIPE_PAYMENT_LINK || "",
   paypalPaymentLink: import.meta.env.VITE_PAYPAL_PAYMENT_LINK || "",
   beehiivFormUrl: import.meta.env.VITE_BEEHIIV_FORM_URL || "",
   surveyUrl: import.meta.env.VITE_SURVEY_URL || "",
 };
 
 export const ANNOUNCEMENT =
-  "Early reservation is open: pay $1 today and receive $100 launch credit toward your first Kastave.";
+  "Join the Kastave Bank Angler Scout Program for early updates, seed-user access, and launch-credit details.";
 
 export const HERO = {
-  eyebrow: "New AI fish finder for exploratory bass bank anglers",
-  title: "3D Shoreline Mapping Is Finally Portable.",
-  body: "Meet Kastave, a rugged unmanned fish-finding scout built to search unfamiliar bank water, rebuild underwater terrain, read fish and water signals, and recommend the next cast.",
-  note: "$1 is a non-refundable early reservation deposit. It unlocks a $100 launch credit.",
+  eyebrow: "Kastave Bank Angler Scout Program",
+  title: "Scout First. Cast Smarter.",
+  body: "A smart RC scout boat for bank anglers: go manual or autonomous, map the underwater terrain, and mark likely fish-holding spots before your first cast.",
+  note: "Join the waitlist for field-test updates, or reserve an early scout spot for $1.",
 };
+
+export const BANK_PAIN_POINTS = [
+  "I cannot see underwater terrain from the bank",
+  "I do not know where fish are holding",
+  "Bank access limits the water I can scout",
+  "My first cast is mostly guessing",
+  "Carrying extra gear is a pain",
+];
 
 export const TRUST = {
   rating: "4.3 / 5 target launch benchmark",
   note: "Seed-user reservations, field-test updates, and transparent production progress.",
 };
 
-export const CATEGORY_LINKS = [
-  "Special Offers",
-  "Flagship Product",
-  "Pro Series",
-  "Starter Product",
-  "Accessories",
-  "App",
+export const SCENARIOS = [
+  {
+    label: "Ponds",
+    detail: "Scout shallow shelves, soft bottom, and small cover before you commit your first cast.",
+  },
+  {
+    label: "Reservoir Banks",
+    detail: "Find contour changes, hard transitions, and high-probability stretches from shore.",
+  },
+  {
+    label: "Riprap",
+    detail: "Read depth breaks and rock edges instead of guessing where bait and bass are holding.",
+  },
+  {
+    label: "Grass Edges",
+    detail: "Map the outside edge, openings, and pockets before working a long bank blind.",
+  },
+  {
+    label: "Docks & Laydowns",
+    detail: "Inspect shade, limbs, posts, and nearby depth so your first cast has a reason.",
+  },
+  {
+    label: "Unknown Public Access",
+    detail: "Scout unfamiliar water quickly and decide whether the spot deserves more time.",
+  },
+];
+
+export const COMPARISON_ROWS = [
+  {
+    factor: "Depth",
+    blind: "Guess from bank slope and visible clues",
+    scout: "Build a shoreline scan plan before casting",
+  },
+  {
+    factor: "Cover",
+    blind: "Fish what you can see above the surface",
+    scout: "Map structure targets below the surface",
+  },
+  {
+    factor: "Fish Activity",
+    blind: "Rely on timing, luck, and second-hand reports",
+    scout: "Watch for activity signals that shape the route",
+  },
+  {
+    factor: "First Cast",
+    blind: "Start with instinct and adjust after misses",
+    scout: "Choose a higher-confidence target first",
+  },
 ];
 
 export const PRODUCTS = [
   {
     name: "Kastave Scout",
-    label: "Early reservation",
+    label: "Waitlist open",
     originalPrice: "$699",
-    price: "$1 today",
-    sub: "$100 launch credit",
+    price: "Early access",
+    sub: "$1 reservation available below",
   },
   {
     name: "Kastave Scout Pro",
@@ -64,12 +114,12 @@ export const PRODUCTS = [
 ];
 
 export const ACCESSORIES = [
-  { name: "Waterproof Carry Case", price: "$49" },
-  { name: "Battery Pack", price: "$69" },
-  { name: "Bank Launch Tether", price: "$19" },
-  { name: "Protective Hull Cover", price: "$29" },
-  { name: "Phone Mount Kit", price: "$24" },
-  { name: "Fast Charger", price: "$39" },
+  { name: "Waterproof Carry Case", price: "Planned add-on" },
+  { name: "Battery Pack", price: "Planned add-on" },
+  { name: "Bank Launch Tether", price: "Planned add-on" },
+  { name: "Protective Hull Cover", price: "Planned add-on" },
+  { name: "Phone Mount Kit", price: "Planned add-on" },
+  { name: "Fast Charger", price: "Planned add-on" },
 ];
 
 export const HOTSPOTS = [
@@ -142,14 +192,65 @@ export const CAPABILITIES = [
   },
 ];
 
+export const PRODUCT_HIGHLIGHTS = [
+  {
+    title: "Portable",
+    body: "Fits inside a fishing tackle box so bank anglers can carry it with normal shore gear.",
+  },
+  {
+    title: "Bank-side control",
+    body: "Deploy and control the unmanned scout boat from the shoreline instead of needing a full-size boat.",
+  },
+  {
+    title: "3D underwater reconstruction",
+    body: "Scan terrain in about 5 seconds and rebuild the underwater shape into a usable 3D view.",
+  },
+  {
+    title: "AI spot marking",
+    body: "Identify 3D terrain features and mark likely fish-holding spots before you commit the first cast.",
+  },
+];
+
+export const HIGHLIGHT_CAROUSEL = [
+  {
+    step: "01",
+    image: "recognition",
+    title: "Pack it in your tackle box",
+    body: "Carry the scout with the gear you already bring to the bank, without adding a full boat setup.",
+  },
+  {
+    step: "02",
+    image: "hero",
+    title: "Launch from the bank",
+    body: "Control the unmanned scout boat from shore and inspect water you cannot read by sight.",
+  },
+  {
+    step: "03",
+    image: "process",
+    title: "Scan 3D terrain in seconds",
+    body: "Run a quick scan and turn the underwater shape into a 3D view before choosing a cast lane.",
+  },
+  {
+    step: "04",
+    image: "recognition",
+    title: "AI marks likely holding spots",
+    body: "Use terrain recognition to flag likely cover, breaks, and fish-holding points before your first cast.",
+  },
+];
+
 export const OFFER_ITEMS = [
   "$100 launch credit toward your first Kastave",
   "Production progress and field-test updates",
   "Priority access when early units become available",
-  "Seed-user survey access to shape the product",
+  "Production-in-progress: not a finished-unit shipping claim",
 ];
 
 export const FAQS = [
+  {
+    question: "Is this a finished product?",
+    answer:
+      "No. Kastave is production-in-progress. This program collects seed-user demand, fishing scenarios, and early reservations before any finished-unit shipping claim.",
+  },
   {
     question: "Is the $1 refundable?",
     answer:
