@@ -1,6 +1,9 @@
 import { recordAnalyticsEvent } from "./supabaseBackend.js";
 
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
+let engagementStartedAt = 0;
+let engagementTrackingReady = false;
+let engagementSent = false;
 
 export function captureUtmParams() {
   const params = new URLSearchParams(window.location.search);
@@ -119,7 +122,8 @@ export function initAnalytics() {
       };
   }
 
-  trackEvent("page_view", { path: window.location.pathname });
+  startEngagementTracking();
+  trackEvent("page_view", { path: window.location.pathname, title: document.title });
 }
 
 export function trackEvent(name, properties = {}) {
@@ -161,4 +165,40 @@ function appendScript(src, async = false) {
   script.async = async;
   document.head.appendChild(script);
   return script;
+}
+
+function startEngagementTracking() {
+  if (engagementTrackingReady) {
+    return;
+  }
+
+  engagementTrackingReady = true;
+  engagementStartedAt = Date.now();
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      sendEngagementEvent("visibility_hidden");
+    }
+  });
+
+  window.addEventListener("pagehide", () => sendEngagementEvent("pagehide"));
+}
+
+function sendEngagementEvent(reason) {
+  if (engagementSent || !engagementStartedAt) {
+    return;
+  }
+
+  const durationMs = Date.now() - engagementStartedAt;
+  if (durationMs < 1000) {
+    return;
+  }
+
+  engagementSent = true;
+  trackEvent("page_engagement", {
+    reason,
+    duration_ms: durationMs,
+    duration_seconds: Number((durationMs / 1000).toFixed(2)),
+    path: window.location.pathname,
+  });
 }

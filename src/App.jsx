@@ -2,12 +2,16 @@ import React, { useEffect, useState } from "react";
 import {
   ANNOUNCEMENT,
   BANK_PAIN_POINTS,
+  FAQS,
+  FEATURE_GROUPS,
   HERO,
   HIGHLIGHT_CAROUSEL,
+  LANDING_PAIN_POINTS,
   OFFER_ITEMS,
-  PROCESS_STEPS,
+  PRIVACY_POINTS,
   PRODUCT_HIGHLIGHTS,
   SITE,
+  VALUE_STEPS,
 } from "./content.js";
 import { initAnalytics, trackEvent, withUtm } from "./tracking.js";
 import { recordPainPointAnswer, recordReservationIntent, recordWaitlistSignup } from "./supabaseBackend.js";
@@ -40,6 +44,8 @@ function App() {
   }, []);
 
   const reserveWithPaypal = (source = "unknown") => {
+    trackEvent("cta_click", { cta: "reserve_for_1", source });
+    trackEvent("link_click", { link: "paypal", source, href: SITE.paypalPaymentLink });
     trackEvent("paypal_reserve_click", { source });
     recordReservationIntent({
       amountCents: 100,
@@ -58,6 +64,7 @@ function App() {
   };
 
   const subscribe = (email, source = "inline_form") => {
+    trackEvent("cta_click", { cta: "join_early_access_submit", source });
     trackEvent("email_signup_submit", { source });
     recordWaitlistSignup(email, { source });
 
@@ -76,6 +83,7 @@ function App() {
   };
 
   const focusWaitlist = (source = "unknown") => {
+    trackEvent("cta_click", { cta: "join_early_access", source });
     trackEvent("waitlist_click", { source });
     const input = document.getElementById("hero-email");
     if (input) {
@@ -117,9 +125,17 @@ function App() {
           onReserve={() => reserveWithPaypal("hero")}
           message={signupMessage}
         />
-        <ProductHighlights onReserve={() => reserveWithPaypal("highlight_carousel")} />
-        <ProcessVisual />
-        <Offer onPaypal={() => reserveWithPaypal("offer")} message={signupMessage} />
+        <PainSection />
+        <ValueSection />
+        <FeaturesSection />
+        <PrivacySection />
+        <ReservationSection
+          onSubscribe={(email) => subscribe(email, "reservation")}
+          onWaitlist={() => focusWaitlist("reservation")}
+          onPaypal={() => reserveWithPaypal("reservation")}
+          message={signupMessage}
+        />
+        <FAQ />
       </main>
       <Footer />
       <CheckoutDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
@@ -134,11 +150,16 @@ function AnnouncementBar() {
 
 function SiteNav({ onWaitlist, onReserve }) {
   const [open, setOpen] = useState(false);
-  const navItems = ["Highlights", "Demo", "$1 Reserve"];
+  const navItems = ["Pain", "Plan", "Features", "Privacy", "FAQ"];
 
   return (
     <header className="site-nav">
-      <a className="brand dark-brand" href={SITE.domain} aria-label="Kastave home">
+      <a
+        className="brand dark-brand"
+        href={SITE.domain}
+        aria-label="Kastave home"
+        onClick={() => trackEvent("link_click", { link: "brand", source: "nav", href: SITE.domain })}
+      >
         <span className="brand-mark">K</span>
         <span>{SITE.name}</span>
       </a>
@@ -148,17 +169,24 @@ function SiteNav({ onWaitlist, onReserve }) {
       </button>
       <nav className={open ? "main-nav is-open" : "main-nav"} aria-label="Primary navigation">
         {navItems.map((item) => (
-          <a key={item} href={navHref(item)} onClick={() => setOpen(false)}>
+          <a
+            key={item}
+            href={navHref(item)}
+            onClick={() => {
+              setOpen(false);
+              trackEvent("link_click", { link: item.toLowerCase(), source: "nav", href: navHref(item) });
+            }}
+          >
             {item}
           </a>
         ))}
       </nav>
       <div className="nav-actions">
         <button className="nav-waitlist-button" type="button" onClick={onWaitlist}>
-          Join waitlist
+          Join Early Access
         </button>
         <button className="nav-reserve-button" type="button" onClick={onReserve}>
-          Reserve $1
+          Reserve for $1
         </button>
       </div>
     </header>
@@ -167,9 +195,11 @@ function SiteNav({ onWaitlist, onReserve }) {
 
 function navHref(item) {
   const hrefs = {
-    Highlights: "#highlights",
-    Demo: "#how-it-works",
-    "$1 Reserve": "#special-offers",
+    Pain: "#pain",
+    Plan: "#plan",
+    Features: "#features",
+    Privacy: "#privacy",
+    FAQ: "#faq",
   };
 
   return hrefs[item] || `#${item.toLowerCase().replaceAll(" ", "-")}`;
@@ -180,18 +210,164 @@ function Hero({ onSubscribe, onReserve, message }) {
     <section className="hero commerce-hero" aria-labelledby="hero-title">
       <img className="hero-image" src={heroImage} alt="Kastave fish finder boat scanning a shoreline" />
       <div className="hero-scrim" />
+      <div className="hero-scan-overlay" aria-hidden="true">
+        <span className="scan-line scan-line-one" />
+        <span className="scan-line scan-line-two" />
+        <span className="scan-pin scan-pin-depth">drop-off</span>
+        <span className="scan-pin scan-pin-cover">weed edge</span>
+      </div>
       <div className="hero-content hero-centered">
         <p className="eyebrow">{HERO.eyebrow}</p>
         <h1 id="hero-title">{HERO.title}</h1>
         <p className="hero-copy">{HERO.body}</p>
         <div className="hero-actions" id="reserve">
-          <EmailForm id="hero-email" onSubscribe={onSubscribe} buttonLabel="Join the waitlist" />
+          <EmailForm id="hero-email" onSubscribe={onSubscribe} buttonLabel="Join Early Access" />
           <button className="secondary-link hero-reserve-button" type="button" onClick={onReserve}>
             Reserve for $1
           </button>
         </div>
         <p className="form-message hero-form-message">{message}</p>
         <p className="microcopy">{HERO.note}</p>
+      </div>
+    </section>
+  );
+}
+
+function PainSection() {
+  return (
+    <section className="pain-section" id="pain" aria-labelledby="pain-title">
+      <div className="section-inner pain-grid">
+        <div>
+          <p className="section-kicker">Bank angler problem</p>
+          <h2 id="pain-title">Stop guessing where to start.</h2>
+        </div>
+        <div className="pain-list">
+          {LANDING_PAIN_POINTS.map((point) => (
+            <div className="pain-item" key={point}>
+              <span />
+              <p>{point}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ValueSection() {
+  return (
+    <section className="value-section" id="plan" aria-labelledby="plan-title">
+      <div className="section-inner value-layout">
+        <div className="value-copy">
+          <p className="section-kicker">Product value</p>
+          <h2 id="plan-title">From shoreline scan to fishing plan.</h2>
+          <p>
+            Kastave is built for the moment before your first cast: read the water, identify the
+            structure, and turn unknown bank access into a practical plan.
+          </p>
+        </div>
+        <div className="value-media">
+          <img src={processImage} alt="Kastave scan workflow showing underwater structure and fishing plan" />
+          <div className="value-media-label">Scan route + structure readout</div>
+        </div>
+      </div>
+      <div className="section-inner value-steps">
+        {VALUE_STEPS.map((step) => (
+          <article className="value-step" key={step.label}>
+            <span>{step.label}</span>
+            <h3>{step.title}</h3>
+            <p>{step.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FeaturesSection() {
+  return (
+    <section className="features-section" id="features" aria-labelledby="features-title">
+      <div className="section-inner">
+        <div className="section-heading compact-heading">
+          <p className="section-kicker">Core capabilities</p>
+          <h2 id="features-title">Built to find structure, fish zones, and a first-cast plan.</h2>
+        </div>
+        <div className="feature-grid">
+          {FEATURE_GROUPS.map((group) => (
+            <article className="feature-group" key={group.title}>
+              <h3>{group.title}</h3>
+              <ul>
+                {group.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PrivacySection() {
+  return (
+    <section className="privacy-section" id="privacy" aria-labelledby="privacy-title">
+      <div className="section-inner privacy-layout">
+        <div>
+          <p className="section-kicker">Private maps</p>
+          <h2 id="privacy-title">Your spots stay yours.</h2>
+          <p>
+            Save private waypoints and build your own fishing log. Nothing is shared unless you
+            choose to share it.
+          </p>
+        </div>
+        <div className="privacy-points">
+          {PRIVACY_POINTS.map((point) => (
+            <span key={point}>{point}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ReservationSection({ onSubscribe, onWaitlist, onPaypal, message }) {
+  return (
+    <section className="reservation-section" id="special-offers" aria-labelledby="reservation-title">
+      <div className="section-inner reservation-heading">
+        <p className="section-kicker">Early access</p>
+        <h2 id="reservation-title">Help build the next tool for serious bank anglers.</h2>
+      </div>
+      <div className="section-inner reservation-options">
+        <article className="reservation-card email-card">
+          <span className="option-label">Option A</span>
+          <h3>Email waitlist</h3>
+          <p>Join early access and get product updates, test invites, and launch pricing.</p>
+          <EmailForm id="reservation-email" onSubscribe={onSubscribe} buttonLabel="Join Early Access" />
+          <p className="form-message">{message}</p>
+        </article>
+        <article className="reservation-card payment-card">
+          <span className="option-label">Option B</span>
+          <div className="paypal-logo-row" aria-label="PayPal payment">
+            <span className="paypal-wordmark">PayPal</span>
+          </div>
+          <h3>Reserve early for $1</h3>
+          <p>Get first access updates plus early-bird pricing as the scout program opens.</p>
+          <ul>
+            {OFFER_ITEMS.slice(0, 3).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <button className="checkout-button" type="button" onClick={onPaypal}>
+            Reserve for $1
+          </button>
+        </article>
+      </div>
+      <div className="section-inner reservation-secondary">
+        <button className="text-link" type="button" onClick={onWaitlist}>
+          Not ready to reserve? Join Early Access instead
+        </button>
+        <small>Production-in-progress. No finished-unit shipping claim yet.</small>
       </div>
     </section>
   );
@@ -263,10 +439,9 @@ function HighlightCarousel({ onReserve }) {
 function TrustBar() {
   return (
     <section className="trust-bar" aria-label="Trust signal">
-      <strong>Excellent</strong>
-      <span aria-label="Five star rating">★★★★☆</span>
-      <p>{TRUST.rating}</p>
-      <small>{TRUST.note}</small>
+      <strong>Early test signal</strong>
+      <span aria-label="Transparent pretest">Open</span>
+      <p>Seed-user reservations, field-test updates, and transparent production progress.</p>
     </section>
   );
 }
@@ -581,10 +756,10 @@ function Offer({ onPaypal, message }) {
 
 function FAQ() {
   return (
-    <section className="faq" id="support" aria-label="Kastave questions">
+    <section className="faq" id="faq" aria-label="Kastave questions">
       <div className="section-inner">
-        <p className="section-kicker">Support</p>
-        <h2>Clear terms before anyone pays.</h2>
+        <p className="section-kicker">FAQ</p>
+        <h2>Clear answers before early access.</h2>
         <div className="faq-list">
           {FAQS.map((item) => (
             <details
@@ -606,27 +781,44 @@ function FAQ() {
 }
 
 function Footer() {
+  const trackFooterLink = (link, href) => {
+    trackEvent("link_click", { link, source: "footer", href });
+  };
+
   return (
     <footer className="site-footer">
       <div>
-        <a className="brand" href="/">
+        <a className="brand" href="/" onClick={() => trackFooterLink("brand", "/")}>
           <span className="brand-mark">K</span>
           <span>{SITE.name}</span>
         </a>
         <p>
-          {SITE.programName}: your $1 reservation unlocks a $100 launch credit and marks you as an
-          early user.
+          {SITE.programName}: early access for serious bank anglers learning how to scan before
+          they cast.
         </p>
       </div>
       <div className="footer-links">
-        <a href="#highlights">Highlights</a>
-        <a href="#how-it-works">Demo</a>
-        <a href="#special-offers">$1 Reserve</a>
+        <a href="#pain" onClick={() => trackFooterLink("pain", "#pain")}>
+          Pain
+        </a>
+        <a href="#features" onClick={() => trackFooterLink("features", "#features")}>
+          Features
+        </a>
+        <a href="#special-offers" onClick={() => trackFooterLink("reserve", "#special-offers")}>
+          Reserve
+        </a>
+        <a href="#faq" onClick={() => trackFooterLink("faq", "#faq")}>
+          FAQ
+        </a>
       </div>
       <div>
         <strong>Transparent pretest</strong>
         <small>Production-in-progress. No finished-unit shipping claim yet.</small>
-        <a className="footer-contact" href={`mailto:${SITE.contactEmail}`}>
+        <a
+          className="footer-contact"
+          href={`mailto:${SITE.contactEmail}`}
+          onClick={() => trackFooterLink("contact_email", `mailto:${SITE.contactEmail}`)}
+        >
           Contact: {SITE.contactEmail}
         </a>
       </div>
@@ -709,7 +901,7 @@ function PainPointCta({ open, onClose, onSubmit }) {
           </label>
           <div className="pain-cta-actions">
             <button className="checkout-button" type="submit">
-              Submit and join waitlist
+              Submit and join Early Access
             </button>
             <button className="text-link" type="button" onClick={onClose}>
               Skip for now

@@ -44,7 +44,7 @@ Payment copy should stay clear: the `$1` is a non-refundable early reservation d
 
 ## Supabase Backend
 
-Run the SQL in `supabase/migrations/202605140001_landing_metrics.sql` in your Supabase project SQL editor.
+Run the SQL files in `supabase/migrations/` in order in your Supabase project SQL editor.
 
 It creates:
 
@@ -55,3 +55,12 @@ It creates:
 - `landing_metric_summary`: authenticated-only summary view by A/B variant
 
 The frontend writes to Supabase only when `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set. PayPal completed payments still need PayPal dashboard export or a webhook-backed server endpoint.
+
+`landing_metric_summary` includes:
+
+- Landing Page View / Link Click ratio
+- Average time on page from `page_engagement`
+- CTA click rate
+- Email Lead conversion rate
+- `$1` reservation click conversion rate
+- FAQ expand rate

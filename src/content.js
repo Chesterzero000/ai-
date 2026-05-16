@@ -10,22 +10,72 @@ export const SITE = {
 };
 
 export const ANNOUNCEMENT =
-  "Join the Kastave Bank Angler Scout Program for early updates, seed-user access, and launch-credit details.";
+  "Early access for serious bank anglers: join updates or reserve a $1 spot.";
 
 export const HERO = {
   eyebrow: "Kastave Bank Angler Scout Program",
-  title: "Scout First. Cast Smarter.",
-  body: "A smart RC scout boat for bank anglers: go manual or autonomous, map the underwater terrain, and mark likely fish-holding spots before your first cast.",
-  note: "Join the waitlist for field-test updates, or reserve an early scout spot for $1.",
+  title: "Scan before you cast.",
+  body: "A smarter way for serious bank anglers to read unknown water, find structure, and make the first cast with a plan.",
+  note: "Join early access for product updates, test invites, and launch pricing.",
 };
 
 export const BANK_PAIN_POINTS = [
-  "I cannot see underwater terrain from the bank",
+  "Unknown water takes too long to figure out",
+  "I cannot read structure from shore",
   "I do not know where fish are holding",
-  "Bank access limits the water I can scout",
+  "Sonar data is hard to turn into a fishing plan",
   "My first cast is mostly guessing",
-  "Carrying extra gear is a pain",
 ];
+
+export const LANDING_PAIN_POINTS = [
+  "Unknown water takes time to figure out",
+  "Bank anglers do not have boat electronics",
+  "Structure matters, but it is hard to read from shore",
+  "Sonar data is useful only if you know what it means",
+];
+
+export const VALUE_STEPS = [
+  {
+    label: "01",
+    title: "Scan the bank spot",
+    body: "Launch the scout from shore and run a quick pass across the water you cannot read by sight.",
+  },
+  {
+    label: "02",
+    title: "See structure and fish zones",
+    body: "Turn depth, bottom transitions, cover, bait signals, and activity clues into a readable map.",
+  },
+  {
+    label: "03",
+    title: "Get an AI-assisted first cast plan",
+    body: "Use plain fishing language to decide where to cast, how deep to fish, what to try, and when to move.",
+  },
+];
+
+export const FEATURE_GROUPS = [
+  {
+    title: "Find structure",
+    items: ["water depth", "drop-off", "weed edge", "brush pile", "hard bottom", "soft bottom"],
+  },
+  {
+    title: "Find fish zones",
+    items: ["fish layer", "active zones", "baitfish signals"],
+  },
+  {
+    title: "Get a plan",
+    items: ["where to cast", "how deep to fish", "what bait type to try", "when to move"],
+  },
+  {
+    title: "Save private map",
+    items: ["private waypoints", "fishing log", "personal notes"],
+  },
+  {
+    title: "Learn faster",
+    items: ["AI explains sonar in plain fishing language"],
+  },
+];
+
+export const PRIVACY_POINTS = ["Private by default", "No public spot burning", "User controls sharing"];
 
 export const TRUST = {
   rating: "4.3 / 5 target launch benchmark",
@@ -247,33 +297,33 @@ export const OFFER_ITEMS = [
 
 export const FAQS = [
   {
-    question: "Is this a finished product?",
+    question: "Is this for boat anglers or bank anglers?",
     answer:
-      "No. Kastave is production-in-progress. This program collects seed-user demand, fishing scenarios, and early reservations before any finished-unit shipping claim.",
+      "Kastave is focused on serious bank anglers who need a way to read water without full boat electronics.",
   },
   {
-    question: "Is the $1 refundable?",
+    question: "Does it publicly share my fishing spots?",
     answer:
-      "No. The $1 is a non-refundable early reservation deposit. It signals real interest and unlocks a $100 launch credit for your first Kastave purchase.",
+      "No. Spots are private by default. You can save waypoints and notes without publishing your locations.",
   },
   {
-    question: "Is Kastave already shipping?",
+    question: "Does it guarantee I will catch fish?",
     answer:
-      "Not yet. Kastave is production-in-progress. The page is for early reservations, seed-user learning, and product updates before launch.",
+      "No. It does not guarantee fish. It helps you find structure faster, understand what the scan means, and start with a better plan.",
   },
   {
-    question: "Who is Kastave for?",
+    question: "How is this different from a castable sonar?",
     answer:
-      "Exploratory bass bank anglers who fish unfamiliar lakes, reservoirs, ponds, riprap, grass edges, docks, laydowns, and public shore access.",
+      "A castable sonar gives readings from where you throw it. Kastave is a smart RC scout boat built to scan a bank spot, map structure, and turn that scan into a fishing plan.",
   },
   {
-    question: "What will the final product cost?",
+    question: "What species is it designed for?",
     answer:
-      "The current target range is $600-$800. Early reservation holders receive a $100 launch credit toward their first unit.",
+      "Early access is focused on bass fishing and exploratory bank-fishing scenarios first.",
   },
   {
-    question: "What happens after I reserve?",
+    question: "When will early access start?",
     answer:
-      "You will be directed to a short seed-user survey and added to the early update flow once the email tool is connected.",
+      "Kastave is production-in-progress. Join early access or reserve for $1 to get test invites, product updates, and launch pricing details as they open.",
   },
 ];
