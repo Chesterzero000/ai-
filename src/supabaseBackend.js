@@ -1,7 +1,8 @@
+import { ATTRIBUTION_KEYS } from "./analyticsCore.js";
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const DEFAULT_VARIANT = "one-dollar";
-const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
 
 export function isSupabaseConfigured() {
   return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
@@ -84,6 +85,27 @@ export function recordReservationIntent({
   });
 }
 
+export function recordPurchaseEvent({
+  eventId,
+  amountCents = 100,
+  currency = "USD",
+  provider = "paypal",
+  source = "thanks_page",
+} = {}) {
+  return insertRow("purchase_events", {
+    event_id: eventId || null,
+    provider,
+    amount_cents: amountCents,
+    currency,
+    source,
+    variant: getExperimentVariant(),
+    page_path: window.location.pathname,
+    visitor_id: getVisitorId(),
+    utm: extractUtm({}),
+    user_agent: navigator.userAgent,
+  });
+}
+
 function insertRow(table, row) {
   if (!isSupabaseConfigured()) {
     return Promise.resolve();
@@ -119,7 +141,7 @@ function getVisitorId() {
 function extractUtm(properties) {
   const utm = getStoredUtm();
 
-  UTM_KEYS.forEach((key) => {
+  ATTRIBUTION_KEYS.forEach((key) => {
     const value = properties[key];
     if (value) {
       utm[key] = value;

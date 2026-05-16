@@ -1,20 +1,20 @@
 import { recordAnalyticsEvent } from "./supabaseBackend.js";
+import {
+  ATTRIBUTION_KEYS,
+  buildEventPayload,
+  getMetaEventName,
+  isMetaStandardEvent,
+  parseAttribution,
+} from "./analyticsCore.js";
 
-const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
 let engagementStartedAt = 0;
 let engagementTrackingReady = false;
 let engagementSent = false;
+let observedSectionIds = new Set();
+let analyticsInitialized = false;
 
 export function captureUtmParams() {
-  const params = new URLSearchParams(window.location.search);
-  const captured = {};
-
-  UTM_KEYS.forEach((key) => {
-    const value = params.get(key);
-    if (value) {
-      captured[key] = value;
-    }
-  });
+  const captured = parseAttribution(window.location.search, getStoredUtm());
 
   if (Object.keys(captured).length > 0) {
     localStorage.setItem("kastave_utm", JSON.stringify(captured));
@@ -49,6 +49,11 @@ export function withUtm(url) {
 }
 
 export function initAnalytics() {
+  if (analyticsInitialized) {
+    return;
+  }
+
+  analyticsInitialized = true;
   captureUtmParams();
 
   const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
@@ -80,7 +85,6 @@ export function initAnalytics() {
     window.fbq.queue = [];
     appendScript("https://connect.facebook.net/en_US/fbevents.js", true);
     window.fbq("init", metaPixelId);
-    window.fbq("track", "PageView");
   }
 
   if (tiktokPixelId) {
@@ -123,16 +127,16 @@ export function initAnalytics() {
   }
 
   startEngagementTracking();
-  trackEvent("page_view", { path: window.location.pathname, title: document.title });
+  startSectionTracking();
+  trackEvent("page_view", {}, { standardEvent: "PageView" });
 }
 
-export function trackEvent(name, properties = {}) {
-  const payload = {
-    ...properties,
-    ...getStoredUtm(),
-  };
+export function trackEvent(name, properties = {}, options = {}) {
+  const payload = buildEventPayload(name, properties, getPageContext());
+  const metaEventName = getMetaEventName(name, options.standardEvent);
 
   recordAnalyticsEvent(name, payload);
+  sendServerTrackingEvent(metaEventName || name, payload);
 
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({ event: name, ...payload });
@@ -142,7 +146,11 @@ export function trackEvent(name, properties = {}) {
   }
 
   if (window.fbq) {
-    window.fbq("trackCustom", name, payload);
+    if (metaEventName && isMetaStandardEvent(metaEventName)) {
+      window.fbq("track", metaEventName, payload, { eventID: payload.event_id });
+    } else {
+      window.fbq("trackCustom", metaEventName || name, payload, { eventID: payload.event_id });
+    }
   }
 
   if (window.ttq?.track) {
@@ -152,6 +160,26 @@ export function trackEvent(name, properties = {}) {
   if (window.plausible) {
     window.plausible(name, { props: payload });
   }
+}
+
+export function trackLeadIntent(properties = {}) {
+  trackEvent("lead_intent", properties, { standardEvent: "LeadIntent" });
+}
+
+export function trackLead(properties = {}) {
+  trackEvent("lead", properties, { standardEvent: "Lead" });
+}
+
+export function trackInitiateCheckout(properties = {}) {
+  trackEvent("initiate_checkout", properties, { standardEvent: "InitiateCheckout" });
+}
+
+export function trackPurchase(properties = {}) {
+  trackEvent("purchase", properties, { standardEvent: "Purchase" });
+}
+
+export function trackViewContent(section, properties = {}) {
+  trackEvent("view_content", { section, ...properties }, { standardEvent: "ViewContent" });
 }
 
 function appendScript(src, async = false) {
@@ -184,6 +212,37 @@ function startEngagementTracking() {
   window.addEventListener("pagehide", () => sendEngagementEvent("pagehide"));
 }
 
+function startSectionTracking() {
+  if (!("IntersectionObserver" in window)) {
+    return;
+  }
+
+  observedSectionIds = new Set();
+  const sections = Array.from(document.querySelectorAll("main section[id], .hero"));
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting || entry.intersectionRatio < 0.35) {
+          return;
+        }
+
+        const section = entry.target.id || "hero";
+        if (observedSectionIds.has(section)) {
+          return;
+        }
+
+        observedSectionIds.add(section);
+        trackViewContent(section, {
+          section_label: entry.target.getAttribute("aria-label") || entry.target.getAttribute("aria-labelledby") || section,
+        });
+      });
+    },
+    { threshold: [0.35, 0.6] },
+  );
+
+  sections.forEach((section) => observer.observe(section));
+}
+
 function sendEngagementEvent(reason) {
   if (engagementSent || !engagementStartedAt) {
     return;
@@ -201,4 +260,67 @@ function sendEngagementEvent(reason) {
     duration_seconds: Number((durationMs / 1000).toFixed(2)),
     path: window.location.pathname,
   });
+}
+
+function getPageContext() {
+  return {
+    attribution: getStoredUtm(),
+    path: window.location.pathname,
+    url: window.location.href,
+    title: document.title,
+    referrer: document.referrer,
+    deviceType: getDeviceType(),
+  };
+}
+
+function getDeviceType() {
+  const width = window.innerWidth || 0;
+  if (width < 768) {
+    return "mobile";
+  }
+  if (width < 1024) {
+    return "tablet";
+  }
+  return "desktop";
+}
+
+function sendServerTrackingEvent(metaEventName, payload) {
+  const endpoint = import.meta.env.VITE_META_CAPI_ENDPOINT || import.meta.env.VITE_TRACKING_ENDPOINT || "";
+  if (!endpoint) {
+    return;
+  }
+
+  const body = JSON.stringify({
+    event_name: metaEventName,
+    event_id: payload.event_id,
+    event_time: payload.event_time,
+    event_source_url: payload.page_url,
+    action_source: "website",
+    attribution: pick(payload, ATTRIBUTION_KEYS),
+    custom_data: payload,
+  });
+
+  if (navigator.sendBeacon) {
+    const blob = new Blob([body], { type: "application/json" });
+    navigator.sendBeacon(endpoint, blob);
+    return;
+  }
+
+  fetch(endpoint, {
+    method: "POST",
+    keepalive: true,
+    headers: { "Content-Type": "application/json" },
+    body,
+  }).catch(() => {
+    // Tracking should never block the landing page.
+  });
+}
+
+function pick(source, keys) {
+  return keys.reduce((picked, key) => {
+    if (source[key]) {
+      picked[key] = source[key];
+    }
+    return picked;
+  }, {});
 }
