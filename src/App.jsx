@@ -13,8 +13,21 @@ import {
   SITE,
   VALUE_STEPS,
 } from "./content.js";
-import { initAnalytics, trackEvent, withUtm } from "./tracking.js";
-import { recordPainPointAnswer, recordReservationIntent, recordWaitlistSignup } from "./supabaseBackend.js";
+import {
+  initAnalytics,
+  trackEvent,
+  trackInitiateCheckout,
+  trackLead,
+  trackLeadIntent,
+  trackPurchase,
+  withUtm,
+} from "./tracking.js";
+import {
+  recordPainPointAnswer,
+  recordPurchaseEvent,
+  recordReservationIntent,
+  recordWaitlistSignup,
+} from "./supabaseBackend.js";
 import heroImage from "../assets/kastave-new-hero.png";
 import processImage from "../assets/kastave-new-process.png";
 import recognitionImage from "../assets/kastave-new-recognition.png";
@@ -28,6 +41,33 @@ function App() {
   useEffect(() => {
     initAnalytics();
   }, []);
+
+  useEffect(() => {
+    if (isThanksPage) {
+      const purchaseKey = `kastave_purchase_tracked_${window.location.search || "direct"}`;
+      if (sessionStorage.getItem(purchaseKey) === "true") {
+        return;
+      }
+      sessionStorage.setItem(purchaseKey, "true");
+      const eventId = `purchase_${Date.now()}`;
+      trackPurchase({
+        event_id: eventId,
+        value: 1,
+        currency: "USD",
+        amount_cents: 100,
+        provider: "paypal",
+        source: "thanks_page",
+        content_name: "Kastave $1 early reservation",
+      });
+      recordPurchaseEvent({
+        eventId,
+        amountCents: 100,
+        currency: "USD",
+        provider: "paypal",
+        source: "thanks_page",
+      });
+    }
+  }, [isThanksPage]);
 
   useEffect(() => {
     if (sessionStorage.getItem("kastave_pain_cta_seen") === "true") {
@@ -44,9 +84,18 @@ function App() {
   }, []);
 
   const reserveWithPaypal = (source = "unknown") => {
-    trackEvent("cta_click", { cta: "reserve_for_1", source });
-    trackEvent("link_click", { link: "paypal", source, href: SITE.paypalPaymentLink });
-    trackEvent("paypal_reserve_click", { source });
+    trackLeadIntent({ cta: "reserve_for_1", cta_location: source, source });
+    trackInitiateCheckout({
+      cta: "reserve_for_1",
+      cta_location: source,
+      source,
+      value: 1,
+      currency: "USD",
+      amount_cents: 100,
+      provider: "paypal",
+      content_name: "Kastave $1 early reservation",
+    });
+    trackEvent("outbound_click", { link: "paypal", source, href: SITE.paypalPaymentLink });
     recordReservationIntent({
       amountCents: 100,
       refundable: false,
@@ -60,12 +109,25 @@ function App() {
       return;
     }
 
+    trackEvent("payment_failed", {
+      reason: "missing_payment_link",
+      source,
+      provider: "paypal",
+      value: 1,
+      currency: "USD",
+    });
     setDialogOpen(true);
   };
 
   const subscribe = (email, source = "inline_form") => {
-    trackEvent("cta_click", { cta: "join_early_access_submit", source });
-    trackEvent("email_signup_submit", { source });
+    trackLeadIntent({ cta: "join_early_access_submit", cta_location: source, source });
+    trackLead({
+      source,
+      cta: "join_early_access_submit",
+      cta_location: source,
+      content_name: "Kastave early access waitlist",
+      lead_type: "email_waitlist",
+    });
     recordWaitlistSignup(email, { source });
 
     if (SITE.beehiivFormUrl) {
@@ -83,8 +145,7 @@ function App() {
   };
 
   const focusWaitlist = (source = "unknown") => {
-    trackEvent("cta_click", { cta: "join_early_access", source });
-    trackEvent("waitlist_click", { source });
+    trackLeadIntent({ cta: "join_early_access", cta_location: source, source });
     const input = document.getElementById("hero-email");
     if (input) {
       input.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -221,7 +282,7 @@ function Hero({ onSubscribe, onReserve, message }) {
         <h1 id="hero-title">{HERO.title}</h1>
         <p className="hero-copy">{HERO.body}</p>
         <div className="hero-actions" id="reserve">
-          <EmailForm id="hero-email" onSubscribe={onSubscribe} buttonLabel="Join Early Access" />
+          <EmailForm id="hero-email" source="hero" onSubscribe={onSubscribe} buttonLabel="Join Early Access" />
           <button className="secondary-link hero-reserve-button" type="button" onClick={onReserve}>
             Reserve for $1
           </button>
@@ -343,7 +404,12 @@ function ReservationSection({ onSubscribe, onWaitlist, onPaypal, message }) {
           <span className="option-label">Option A</span>
           <h3>Email waitlist</h3>
           <p>Join early access and get product updates, test invites, and launch pricing.</p>
-          <EmailForm id="reservation-email" onSubscribe={onSubscribe} buttonLabel="Join Early Access" />
+          <EmailForm
+            id="reservation-email"
+            source="reservation"
+            onSubscribe={onSubscribe}
+            buttonLabel="Join Early Access"
+          />
           <p className="form-message">{message}</p>
         </article>
         <article className="reservation-card payment-card">
@@ -598,19 +664,29 @@ function ScoutComparison() {
   );
 }
 
-function EmailForm({ id = "email", onSubscribe, buttonLabel = "Join updates" }) {
+function EmailForm({ id = "email", source = "inline_form", onSubscribe, buttonLabel = "Join updates" }) {
   const [email, setEmail] = useState("");
+  const [inputStarted, setInputStarted] = useState(false);
 
   const submit = (event) => {
     event.preventDefault();
     const trimmedEmail = email.trim();
 
     if (!trimmedEmail) {
+      trackEvent("lead_submit_failed", { source, reason: "empty_email" });
       return;
     }
 
-    onSubscribe(trimmedEmail);
+    onSubscribe(trimmedEmail, source);
     setEmail("");
+  };
+
+  const updateEmail = (event) => {
+    if (!inputStarted) {
+      setInputStarted(true);
+      trackEvent("email_input_started", { source, field: "email" });
+    }
+    setEmail(event.target.value);
   };
 
   return (
@@ -625,7 +701,7 @@ function EmailForm({ id = "email", onSubscribe, buttonLabel = "Join updates" }) 
         placeholder="you@example.com"
         autoComplete="email"
         value={email}
-        onChange={(event) => setEmail(event.target.value)}
+        onChange={updateEmail}
         required
       />
       <button type="submit">{buttonLabel}</button>
@@ -766,7 +842,7 @@ function FAQ() {
               key={item.question}
               onToggle={(event) => {
                 if (event.currentTarget.open) {
-                  trackEvent("faq_expand", { question: item.question });
+                  trackEvent("faq_opened", { question: item.question });
                 }
               }}
             >
